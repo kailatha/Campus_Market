@@ -7,6 +7,21 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Install ini dulu ya habis clone
+1. Install dependency dulu:
+
+composer install
+npm install
+
+2. Copy file environment:
+
+cp .env.example .env
+
+3. Generate key laravel:
+
+php artisan key:generate
+
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
