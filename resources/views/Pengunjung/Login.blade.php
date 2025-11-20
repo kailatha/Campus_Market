@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusMarket Login</title>
+    <title>SiToko Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -34,10 +34,10 @@
         }
 
         body {
-            height: 100vh;
+            min-height: 100vh;
             width: 100%;
-            /* Gradient background sesuai gambar */
-            background: linear-gradient(180deg, #FF9494 0%, #FFD1D1 60%, #FFEBEB 100%);
+            /* Soft pink gradient that remains pink down to the footer area */
+            background: linear-gradient(180deg, #FF9894 0%, #FFBFC0 35%, #FFDCDC 65%, #FFEBEB 100%);
             display: flex;
             flex-direction: column;
         }
@@ -218,7 +218,7 @@
     <nav>
         <div class="nav-logo">
             <i class="fas fa-shopping-cart"></i>
-            <span>CampusMarket</span>
+            <span>SiToko</span>
         </div>
         <div class="nav-login-text">Masuk</div>
     </nav>
@@ -227,7 +227,7 @@
         
         <div class="left-branding">
             <i class="fas fa-shopping-cart big-icon"></i>
-            <h1 class="brand-title">CampusMarket</h1>
+            <h1 class="brand-title">SiToko</h1>
         </div>
 
         <div class="login-card">
@@ -270,9 +270,6 @@
     </script>
 
     {{-- Scroll to Top Button --}}
-    {{-- Extend pink area above footer --}}
-    <div class="w-full bg-gradient-to-b from-[#FF9494] via-[#FFD1D1] to-[#FFEBEB] h-64 md:h-96 lg:h-[560px]"></div>
-
     {{-- FOOTER: same as Home --}}
     <x-footer />
 

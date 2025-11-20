@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusMarket Register</title>
+    <title>SiToko Register</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -34,9 +34,10 @@
         }
 
         body {
-            height: 100vh;
+            min-height: 100vh;
             width: 100%;
-            background: linear-gradient(180deg, #FF9494 0%, #FFD1D1 60%, #FFEBEB 100%);
+            /* Soft pink gradient that remains pink down to the footer area */
+            background: linear-gradient(180deg, #FF9894 0%, #FFBFC0 35%, #FFDCDC 65%, #FFEBEB 100%);
             display: flex;
             flex-direction: column;
         }
@@ -182,7 +183,7 @@
     <nav>
         <div class="nav-logo">
             <i class="fas fa-shopping-cart"></i>
-            <span>CampusMarket</span>
+            <span>SiToko</span>
         </div>
         <div class="nav-login-text">Register</div>
     </nav>
@@ -191,7 +192,7 @@
         
         <div class="left-branding">
             <i class="fas fa-shopping-cart big-icon"></i>
-            <h1 class="brand-title">CampusMarket</h1>
+            <h1 class="brand-title">SiToko</h1>
         </div>
 
         <div class="login-card">
@@ -257,17 +258,8 @@
         });
     </script>
     
-
-    {{-- Scroll to Top Button --}}
-    {{-- Extend pink area above footer --}}
-    <div class="w-full bg-gradient-to-b from-[#FF9494] via-[#FFD1D1] to-[#FFEBEB] h-44 md:h-72 lg:h-96"></div>
-
     {{-- FOOTER: same as Home --}}
     <x-footer />
-
-    <button id="scrollToTop" class="fixed bottom-6 right-6 bg-pink-500 text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center translate-y-20 opacity-0 transition-all duration-300 hover:bg-pink-600 hover:-translate-y-1 z-40">
-        <i class="fa-solid fa-arrow-up"></i>
-    </button>
 
     {{-- JAVASCRIPT LOGIC --}}
     <script>
