@@ -78,13 +78,28 @@
             width: 100%; padding: 15px; background-color: #FF7A7A; color: white; border: none;
             border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
             box-shadow: 0 4px 15px rgba(255, 122, 122, 0.3); transition: transform 0.2s, background 0.3s; margin-top: 30px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
         }
         .btn-register:hover { background-color: #ff6363; transform: translateY(-2px); }
+        .btn-register:disabled { background-color: #FAB2B2; cursor: not-allowed; transform: none; }
+        
         .btn-cancel { background-color: transparent; color: #718096; border: 1px solid #E2E8F0; box-shadow: none; margin-top: 15px; }
         .btn-cancel:hover { background-color: #F7FAFC; color: #4A5568; transform: none; }
         
         .card-footer { margin-top: 25px; text-align: center; font-size: 13px; color: #718096; }
         .card-footer a { color: #FF7A7A; text-decoration: none; font-weight: 600; }
+
+        /* Loader Icon Animation */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         footer { background-color: white; padding: 60px 80px 30px; border-top: 1px solid #FFEBEB; margin-top: auto; }
         .footer-content { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
@@ -257,7 +272,10 @@
                     <label for="agree" class="text-xs text-gray-600">Saya menyetujui <a href="#" class="text-primary-600 hover:underline">Syarat & Ketentuan</a>.</label>
                 </div>
 
-                <button type="submit" class="btn-register">DAFTAR SEKARANG</button>
+                <button type="submit" class="btn-register" id="btn-submit">
+                    <span class="loader" id="btn-loader"></span>
+                    <span id="btn-text">DAFTAR SEKARANG</span>
+                </button>
                 <button type="button" class="btn-register btn-cancel" onclick="window.location.href='/'">Batalkan</button>
             </form>
 
@@ -319,23 +337,20 @@
     </button>
     
     <script>
-        // --- 1. TOGGLE PASSWORD VISIBILITY ---
+        // 1. Toggle Password
         function togglePassword(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
-            
             if (input.type === "password") {
                 input.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash'); // Ganti ikon jadi mata dicoret
+                icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
             } else {
                 input.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye'); // Ganti ikon jadi mata biasa
+                icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
             }
         }
 
-        // --- 2. LOGIKA DROPDOWN WILAYAH (API) ---
+        // 2. Dropdown Wilayah (API)
         const apiBaseUrl = 'https://www.emsifa.com/api-wilayah-indonesia/api';
         const selectProvinsi = document.getElementById('select-provinsi');
         const selectKota = document.getElementById('select-kota');
@@ -347,15 +362,10 @@
                 const provinces = await response.json();
                 provinces.forEach(prov => {
                     const option = document.createElement('option');
-                    option.value = prov.id; 
-                    option.text = prov.name;
-                    option.setAttribute('data-name', prov.name);
+                    option.value = prov.id; option.text = prov.name; option.setAttribute('data-name', prov.name);
                     selectProvinsi.appendChild(option);
                 });
-            } catch (error) {
-                console.error('Error fetching provinces:', error);
-                alert('Gagal memuat data wilayah. Cek koneksi internet Anda.');
-            }
+            } catch (error) { console.error('Error:', error); }
         });
 
         selectProvinsi.addEventListener('change', async function() {
@@ -363,72 +373,80 @@
             const provName = this.options[this.selectedIndex].getAttribute('data-name');
             if(provName) inputProvinsiNama.value = provName;
 
-            selectKota.innerHTML = '<option value="">Memuat Data...</option>';
+            selectKota.innerHTML = '<option value="">Memuat...</option>';
             selectKota.disabled = true;
 
-            if (!provId) {
-                selectKota.innerHTML = '<option value="">Pilih Provinsi Dulu</option>';
-                return;
-            }
+            if (!provId) { selectKota.innerHTML = '<option value="">Pilih Provinsi Dulu</option>'; return; }
 
             try {
                 const response = await fetch(`${apiBaseUrl}/regencies/${provId}.json`);
                 const regencies = await response.json();
-
                 selectKota.innerHTML = '<option value="">Pilih Kota/Kabupaten...</option>';
                 regencies.forEach(kota => {
                     const option = document.createElement('option');
-                    option.value = kota.name; 
-                    option.text = kota.name;
+                    option.value = kota.name; option.text = kota.name;
                     selectKota.appendChild(option);
                 });
-
                 selectKota.disabled = false;
-            } catch (error) {
-                console.error('Error fetching regencies:', error);
-                selectKota.innerHTML = '<option value="">Gagal memuat data</option>';
-            }
+            } catch (error) { selectKota.innerHTML = '<option value="">Gagal memuat data</option>'; }
         });
 
-        // --- 3. VALIDASI FORM & ANIMASI ---
+        // 3. SUBMIT HANDLER (Updated for SRS-MartPlace-02)
         document.getElementById('sellerRegisterForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Validasi Password
             const pass = document.getElementById('password').value;
             const confirm = document.getElementById('password_confirmation').value;
-            
-            if (pass !== confirm) {
-                alert('Password dan Konfirmasi Password tidak cocok!');
-                return;
-            }
+            if (pass !== confirm) { alert('Password dan Konfirmasi Password tidak cocok!'); return; }
 
+            // Validasi File
             const fotoPic = document.querySelector('input[name="foto_pic"]').files[0];
             const fileKtp = document.querySelector('input[name="file_ktp"]').files[0];
-
             if(fotoPic && fotoPic.size > 2 * 1024 * 1024) { alert('Ukuran Foto PIC terlalu besar (Max 2MB).'); return; }
             if(fileKtp && fileKtp.size > 5 * 1024 * 1024) { alert('Ukuran File KTP terlalu besar (Max 5MB).'); return; }
 
-            // Simulasi Output
-            alert(`Registrasi Berhasil!\nLokasi: ${selectKota.value}, ${inputProvinsiNama.value}`);
+            // Loading Effect
+            const btnSubmit = document.getElementById('btn-submit');
+            const btnLoader = document.getElementById('btn-loader');
+            const btnText = document.getElementById('btn-text');
+            
+            btnSubmit.disabled = true;
+            btnLoader.style.display = 'block';
+            btnText.textContent = 'MENGIRIM DATA...';
+
+            // Simulate Server Process Delay
+            setTimeout(() => {
+                // PESAN ALERT SESUAI SRS-MartPlace-02
+                alert(
+                    "REGISTRASI BERHASIL DIKIRIM!\n\n" +
+                    "Data Anda sedang dalam proses VERIFIKASI oleh Admin untuk pengecekan kelengkapan administrasi.\n\n" +
+                    "Mohon tunggu notifikasi DITERIMA atau DITOLAK melalui EMAIL.\n" +
+                    "Jika diterima, email akan berisi link aktivasi akun Anda."
+                );
+
+                // Reset Button & Form
+                btnSubmit.disabled = false;
+                btnLoader.style.display = 'none';
+                btnText.textContent = 'DAFTAR SEKARANG';
+                document.getElementById('sellerRegisterForm').reset();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            }, 2000); // Delay 2 detik
         });
 
+        // Scroll Animation
         const navbar = document.getElementById('navbar');
         const scrollBtn = document.getElementById('scrollToTop');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                    observer.unobserve(entry.target);
-                }
+                if (entry.isIntersecting) { entry.target.classList.remove('opacity-0', 'translate-y-10'); observer.unobserve(entry.target); }
             });
         });
         document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 10) navbar.classList.add('shadow-md');
-            else navbar.classList.remove('shadow-md');
-            if (window.scrollY > 300) scrollBtn.classList.remove('translate-y-20', 'opacity-0');
-            else scrollBtn.classList.add('translate-y-20', 'opacity-0');
+            if (window.scrollY > 10) navbar.classList.add('shadow-md'); else navbar.classList.remove('shadow-md');
+            if (window.scrollY > 300) scrollBtn.classList.remove('translate-y-20', 'opacity-0'); else scrollBtn.classList.add('translate-y-20', 'opacity-0');
         });
         scrollBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     </script>
