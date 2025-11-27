@@ -27,14 +27,14 @@
     </style>
 </head>
 <body class="bg-red-50 text-gray-800 font-sans antialiased">
+
 <div class="flex h-screen overflow-hidden">
-    @include('seller.layouts.sidebar', ['activeMenu' => 'produk'])
+    @include('seller.layouts.sidebar', ['activeMenu' => 'tambahproduk'])
     <main class="flex-1 overflow-x-hidden overflow-y-auto bg-red-50 p-6 md:p-8">
-        
         <!-- Header Halaman -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-semibold text-gray-800">TAMBAH PRODUK</h1>
-            <button onclick="history.back()" class="flex items-center text-red-500 font-medium hover:text-red-600 transition-colors">
+        <div class="flex flex-col items-center mb-6">
+            <h1 class="text-3xl font-semibold text-gray-800 w-full text-center">TAMBAH PRODUK</h1>
+            <button onclick="history.back()" class="flex items-center text-red-500 font-medium hover:text-red-600 transition-colors mt-2">
                 <!-- Arrow Left Icon -->
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Kembali ke Daftar Produk
@@ -43,17 +43,14 @@
 
         <!-- Form Kontainer (Pusat Form di tengah) -->
         <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-red-100 p-6 md:p-10">
-            
             <form id="productForm" onsubmit="event.preventDefault(); saveProduct();">
-
                 <!-- BAGIAN 1: Informasi Dasar Produk -->
-                <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-3 border-gray-100">Informasi Produk</h2>
-                
-                <div class="space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Informasi Produk</h2>
+                <div class="space-y-6 pb-6 border-b border-gray-200">
                     <!-- Kategori Produk -->
-                    <div>
+                    <div class="pb-4">
                         <label for="kategori" class="block text-sm font-medium text-gray-700 mb-2">Kategori Produk</label>
-                        <select id="kategori" required class="form-input text-gray-500">
+                        <select id="kategori" required class="form-input text-gray-500 bg-gray-50 border-gray-300 focus:border-red-500">
                             <option value="" disabled selected>Silahkan Pilih</option>
                             <option value="makanan">Makanan</option>
                             <option value="elektronik">Elektronik</option>
@@ -61,23 +58,20 @@
                             <option value="alat_tulis">Alat Tulis</option>
                         </select>
                     </div>
-
                     <!-- Nama Produk -->
-                    <div>
+                    <div class="pb-4">
                         <label for="nama_produk" class="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
-                        <input type="text" id="nama_produk" placeholder="Masukkan nama produk" required class="form-input">
+                        <input type="text" id="nama_produk" placeholder="Masukkan nama produk" required class="form-input bg-gray-50 border-gray-300 focus:border-red-500">
                     </div>
                 </div>
 
                 <!-- BAGIAN 1.5: Upload Foto Produk -->
-                <h2 class="text-xl font-semibold text-gray-800 mt-8 mb-6 border-b pb-3 border-gray-100">Foto Produk</h2>
-
-                <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 mt-8">Foto Produk</h2>
+                <div class="pb-6 border-b border-gray-200">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unggah Foto (Maks. 5 Foto)</label>
                     <div id="photoPreview" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                         <!-- Preview foto akan muncul di sini -->
                     </div>
-
                     <div id="dropzone" class="dropzone" onclick="document.getElementById('fileInput').click()">
                         <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
                         <!-- Upload Icon -->
@@ -86,20 +80,17 @@
                         <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG. Ukuran maks 2MB.</p>
                     </div>
                 </div>
-                <!-- END BAGIAN 1.5 -->
 
-                <!-- BAGIAN 2: Harga (Hanya Harga Jual) -->
-                <h2 class="text-xl font-semibold text-gray-800 mt-8 mb-6 border-b pb-3 border-gray-100">Detail Harga</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Harga Jual (Disesuaikan menjadi Harga Rp) -->
-                    <div class="md:col-span-1">
+                <!-- BAGIAN 2: Harga -->
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 mt-8">Detail Harga</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-gray-200">
+                    <!-- Harga Rp (Ditambah atribut min="0") -->
+                    <div class="md:col-span-1 pb-4">
                         <label for="harga_jual" class="block text-sm font-medium text-gray-700 mb-2">Harga Rp</label>
-                        <input type="number" id="harga_jual" placeholder="angka" required class="form-input">
+                        <input type="number" id="harga_jual" placeholder="angka" required class="form-input bg-gray-50 border-gray-300 focus:border-red-500" min="0">
                     </div>
-                    <!-- Kolom Harga Pokok Dihapus -->
                 </div>
-                
+
                 <!-- Separator dan Tombol Show More (untuk memperjelas versi desktop) -->
                 <div class="flex items-center justify-end mt-8">
                     <button type="button" onclick="toggleMoreFields()" class="text-sm font-medium text-red-500 hover:text-red-600 transition-colors">
@@ -107,52 +98,35 @@
                     </button>
                 </div>
 
-                <!-- BAGIAN 3: Detail Tambahan (Kode, Stok, Deskripsi) - Tersembunyi default -->
-                <div id="moreFields" class="space-y-6 pt-6 hidden">
-                    
-                    <!-- Kode Produk (Barcode) -->
-                    <div>
-                        <label for="kode_produk" class="block text-sm font-medium text-gray-700 mb-2">Kode Produk (Barcode)</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="kode_produk" placeholder="angka" class="form-input pr-16">
-                            <!-- Barcode Icon Button -->
-                            <button type="button" class="absolute right-0 top-0 h-full px-3 bg-gray-100 rounded-r-xl border border-gray-300 hover:bg-gray-200 transition-colors">
-                                <!-- Barcode SVG Icon -->
-                                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7h18M3 7l-9 6a2 2 0 000 3h18a2 2 0 000-3l-9-6z"></path></svg>
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Kode produk tidak harus diisi</p>
-                    </div>
-
+                <!-- BAGIAN 3: Detail Tambahan (Stok, Deskripsi) - Tersembunyi default -->
+                <div id="moreFields" class="space-y-6 pt-6 hidden pb-6 border-b border-gray-200">
                     <!-- Pengaturan Stok Produk -->
-                    <div>
+                    <div class="pb-4">
                         <label for="stok_produk" class="block text-sm font-medium text-gray-700 mb-2">Pengaturan Stok Produk</label>
-                        <select id="stok_produk" class="form-input text-gray-700">
+                        <select id="stok_produk" class="form-input text-gray-700 bg-gray-50 border-gray-300 focus:border-red-500">
                             <option value="tanpa_stok">Tanpa Stok</option>
                             <option value="dengan_stok">Atur Jumlah Stok (Manual)</option>
                         </select>
                     </div>
-
                     <!-- Deskripsi Produk -->
-                    <div>
+                    <div class="pb-4">
                         <label for="deskripsi_produk" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Produk</label>
-                        <textarea id="deskripsi_produk" rows="4" placeholder="Jelaskan produk Anda..." class="form-input resize-y"></textarea>
+                        <textarea id="deskripsi_produk" rows="4" placeholder="Jelaskan produk Anda..." class="form-input resize-y bg-gray-50 border-gray-300 focus:border-red-500"></textarea>
                     </div>
                 </div>
 
                 <!-- Footer / Tombol Simpan -->
-                <div class="flex justify-end mt-8 pt-6 border-t border-gray-100">
+                <div class="flex justify-end mt-8 pt-6 border-t border-gray-200">
                     <button type="submit" class="flex items-center px-8 py-3 bg-green-600 text-white font-semibold rounded-xl shadow-md hover:bg-green-700 transition-colors">
                         <!-- Simpan Icon -->
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         SIMPAN
                     </button>
                 </div>
-
             </form>
-
         </div>
     </main>
+</div>
 
     <script>
         // Array untuk menyimpan file foto yang diunggah
@@ -300,7 +274,15 @@
         // Fungsi Simulasi Simpan Produk
         function saveProduct() {
             const name = document.getElementById('nama_produk').value;
-            const price = document.getElementById('harga_jual').value;
+            const priceInput = document.getElementById('harga_jual');
+            const price = priceInput.value;
+
+            // Validasi client-side tambahan untuk harga (jika browser tidak mendukung min="0")
+            if (price < 0) {
+                showNotification('Harga tidak boleh bernilai negatif.', 'bg-red-100 border-red-400 text-red-700');
+                priceInput.focus();
+                return;
+            }
 
             if (uploadedFiles.length === 0) {
                  showNotification('Mohon unggah minimal 1 foto produk.', 'bg-red-100 border-red-400 text-red-700');
