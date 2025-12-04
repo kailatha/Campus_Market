@@ -17,12 +17,12 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-red-50 text-gray-800 antialiased" x-data="verificationDetail()">
+<body class="bg-red-50 text-gray-800 font-sans antialiased" x-data="verificationDetail()">
 
     <div class="flex h-screen overflow-hidden">
 
         @include('Admin._sidebar', ['active' => 'verifikasi', 'verifCount' => 3])
-
+        
 
         <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
             
@@ -62,7 +62,7 @@
                     <div class="lg:col-span-5 space-y-6">
                         
                         <div class="bg-white rounded-2xl shadow-sm border border-red-50 p-6">
-                            <h3 class="text-sm font-bold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                            <h3 class="text-sm font-semibold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                                 <span class="bg-red-100 p-1 rounded">🏪</span> Profil & Kontak
                             </h3>
                             <div class="space-y-4">
@@ -92,7 +92,7 @@
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-red-50 p-6">
-                            <h3 class="text-sm font-bold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                            <h3 class="text-sm font-semibold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                                 <span class="bg-red-100 p-1 rounded">📍</span> Detail Alamat
                             </h3>
                             <div class="space-y-4">
@@ -128,7 +128,7 @@
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-red-50 p-6">
-                            <h3 class="text-sm font-bold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                            <h3 class="text-sm font-semibold text-red-500 uppercase tracking-wide mb-4 flex items-center gap-2">
                                 <span class="bg-red-100 p-1 rounded">🆔</span> Validasi Identitas
                             </h3>
                             <div class="space-y-4">
