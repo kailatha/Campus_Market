@@ -43,58 +43,118 @@
             <a href="/products" class="text-[#FF9894] font-semibold text-sm hover:underline">Lihat Semua</a>
         </div>
 
-        @if(!empty($categories) && $categories->count())
-            <div class="mb-4 flex items-center gap-2 overflow-x-auto py-2">
-                <a href="{{ route('products.index', array_merge(request()->query(), ['category' => null])) }}" class="text-sm px-3 py-1 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-pink-50">Semua</a>
-                @foreach($categories as $cat)
-                    @php $isActive = (string)($activeCategory ?? '') === (string)$cat->id; @endphp
-                    <a href="{{ route('products.index', array_merge(request()->query(), ['category' => $cat->id])) }}" class="text-sm px-3 py-1 rounded-full border {{ $isActive ? 'border-pink-300 bg-[#FF9894] text-white' : 'border-gray-200 bg-white text-gray-700' }} hover:{{ $isActive ? '' : 'bg-pink-50' }}">
-                        {{ $cat->name }}
-                    </a>
-                @endforeach
-            </div>
-        @endif
-
-        @if(empty($products) || $products->total() == 0)
-            <div class="bg-white rounded-lg p-8 text-center border border-gray-100 shadow-sm">
-                <p class="text-gray-600 font-medium">Produk tidak ditemukan.</p>
-            </div>
-        @else
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                @foreach($products as $index => $item)
-                <a href="{{ $item['url'] }}" class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer group overflow-hidden animate-on-scroll flex flex-col h-full no-underline text-inherit">
-                    <div class="relative aspect-square bg-gray-100 overflow-hidden">
-                        <img src="{{ $item['img'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Sidebar Filters -->
+            <aside class="md:col-span-3">
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <div class="p-4 border-b">
+                        <h4 class="font-semibold text-gray-800">Filter</h4>
                     </div>
-                    <div class="p-3 flex flex-col flex-1">
-                        <h4 class="text-xs md:text-sm text-gray-700 font-normal leading-snug line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">
-                            {{ $item['name'] }}
-                        </h4>
-            
-                        <div class="mt-1 mb-2">
-                            <p class="text-sm md:text-base font-bold text-slate-900">{{ $item['price'] }}</p>
-                        </div>
-            
-                        <div class="flex items-center gap-1 mt-auto text-[10px] text-gray-500">
-                            <i class="fa-solid fa-star text-yellow-400"></i>
-                            <span class="font-medium text-gray-600">{{ $item['rating'] }}</span>
-                            <span class="text-gray-300 mx-1">|</span>
-                            <span>Terjual {{ $item['sold'] }}</span>
-                        </div>
-            
-                        <div class="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
-                            <i class="fa-solid fa-shop"></i>
-                            <span class="truncate max-w-[100px]">{{ $item['location'] }}</span>
-                        </div>
-                    </div>
-                </a>
-                @endforeach
-            </div>
+                    <form method="GET" action="{{ route('products.index') }}" class="p-4 space-y-4">
+                        <!-- Keep existing query params except the ones we'll override -->
+                        @foreach(request()->except(['product','shop','category','province','city','page']) as $key => $val)
+                            <input type="hidden" name="{{ $key }}" value="{{ $val }}" />
+                        @endforeach
 
-            <div class="text-center mt-10">
-                {{ $products->appends(request()->query())->links('pagination::tailwind') }}
-            </div>
-        @endif
+                        <!-- Product name removed per request -->
+
+                        <!-- Shop name -->
+                        <div>
+                            <label class="text-sm text-gray-600">Nama toko</label>
+                            <input type="text" name="shop" value="{{ old('shop', $shop ?? '') }}" class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-300" placeholder="Contoh: Gramedia" />
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label class="text-sm text-gray-600">Kategori</label>
+                            <select name="category" class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-300">
+                                <option value="">Semua kategori</option>
+                                @if(!empty($categories) && $categories->count())
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}" {{ (string)($activeCategory ?? '') === (string)$cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        <!-- Location: Province (dropdown) -->
+                        <div>
+                            <label class="text-sm text-gray-600">Provinsi</label>
+                            <select id="province-select" name="province" class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-300">
+                                <option value="">Semua provinsi</option>
+                                @foreach(($provinceList ?? collect()) as $prov)
+                                    <option value="{{ $prov }}" {{ (string)($province ?? '') === (string)$prov ? 'selected' : '' }}>{{ $prov }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Location: City/Kabupaten (dropdown) -->
+                        <div>
+                            <label class="text-sm text-gray-600">Kota/Kabupaten</label>
+                            <select id="city-select" name="city" class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-300">
+                                <option value="">Semua kota/kabupaten</option>
+                                @foreach(($cityList ?? collect()) as $c)
+                                    <option value="{{ $c }}" {{ (string)($city ?? '') === (string)$c ? 'selected' : '' }}>{{ $c }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 bg-primary-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-pink-500">Terapkan</button>
+                            <a href="{{ route('products.index') }}" class="flex-1 text-center border border-gray-300 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50">Reset</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Optional: category chips remain under grid in mobile; hidden here -->
+            </aside>
+
+            <!-- Results -->
+            <section class="md:col-span-9">
+                <!-- Category chips removed per request -->
+
+                @if(empty($products) || $products->total() == 0)
+                    <div class="bg-white rounded-lg p-8 text-center border border-gray-100 shadow-sm">
+                        <p class="text-gray-600 font-medium">Produk tidak ditemukan.</p>
+                    </div>
+                @else
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                        @foreach($products as $index => $item)
+                        <a href="{{ $item['url'] }}" class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer group overflow-hidden animate-on-scroll flex flex-col h-full no-underline text-inherit">
+                            <div class="relative aspect-square bg-gray-100 overflow-hidden">
+                                <img src="{{ $item['img'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            </div>
+                            <div class="p-3 flex flex-col flex-1">
+                                <h4 class="text-xs md:text-sm text-gray-700 font-normal leading-snug line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">
+                                    {{ $item['name'] }}
+                                </h4>
+                
+                                <div class="mt-1 mb-2">
+                                    <p class="text-sm md:text-base font-bold text-slate-900">{{ $item['price'] }}</p>
+                                </div>
+                
+                                <div class="flex items-center gap-1 mt-auto text-[10px] text-gray-500">
+                                    <i class="fa-solid fa-star text-yellow-400"></i>
+                                    <span class="font-medium text-gray-600">{{ $item['rating'] }}</span>
+                                    <span class="text-gray-300 mx-1">|</span>
+                                    <span>Terjual {{ $item['sold'] }}</span>
+                                </div>
+                
+                                <div class="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
+                                    <i class="fa-solid fa-shop"></i>
+                                    <span class="truncate max-w-[100px]">{{ $item['location'] }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        @endforeach
+                    </div>
+
+                    <div class="text-center mt-10">
+                        {{ $products->appends(request()->query())->links('pagination::tailwind') }}
+                    </div>
+                @endif
+            </section>
+        </div>
     </main>
 
     {{-- Footer --}}
@@ -108,6 +168,29 @@
         const scrollBtn = document.getElementById('scrollToTop');
         window.addEventListener('scroll', () => { if (window.scrollY > 300) { scrollBtn.classList.remove('translate-y-20','opacity-0'); } else { scrollBtn.classList.add('translate-y-20','opacity-0'); } });
         scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // Dependent city dropdown
+        const provinceSelect = document.getElementById('province-select');
+        const citySelect = document.getElementById('city-select');
+        async function loadCitiesByProvince(province) {
+            citySelect.innerHTML = '<option value="">Semua kota/kabupaten</option>';
+            if (!province) return;
+            try {
+                const res = await fetch(`{{ route('regions.cities') }}?province=${encodeURIComponent(province)}`);
+                const data = await res.json();
+                data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    citySelect.appendChild(opt);
+                });
+            } catch (e) { /* ignore */ }
+        }
+        provinceSelect?.addEventListener('change', (e) => loadCitiesByProvince(e.target.value));
+        // If province already selected but city list empty (first load), fetch cities
+        if (provinceSelect && provinceSelect.value && (!citySelect || citySelect.options.length <= 1)) {
+            loadCitiesByProvince(provinceSelect.value);
+        }
     </script>
 
 </body>

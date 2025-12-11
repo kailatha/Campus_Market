@@ -10,12 +10,28 @@ use Illuminate\Database\QueryException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\ProductDetail;
 use App\Models\Rating;
+use App\Models\Region;
+use App\Models\Seller;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    /**
+     * Determine the column used for city/regency in the region table.
+     */
+    private function getCityColumn(): ?string
+    {
+        $candidates = ['city', 'kabupaten', 'kota', 'city_name', 'regency'];
+        foreach ($candidates as $c) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('region', $c)) {
+                return $c;
+            }
+        }
+        return null;
+    }
 
     /**
      * Display the specified product detail.
@@ -24,44 +40,34 @@ class ProductController extends Controller
     {
         try {
             $product = Product::with(['seller.user', 'seller.region', 'category', 'productDetails'])->findOrFail($id);
-    
-            // >>> tambahkan blok ini <<<
+
             $img = $product->image;
             if ($img) {
                 if (filter_var($img, FILTER_VALIDATE_URL)) {
-                    // kalau sudah full URL (unsplash, dll)
                     $imageUrl = $img;
                 } elseif (Str::startsWith($img, 'images/')) {
-                    // kalau path-nya "images/...." (public/images)
                     $imageUrl = asset($img);
                 } else {
-                    // default: anggap disimpan di storage
                     $imageUrl = asset('storage/' . ltrim($img, '/'));
                 }
             } else {
-                // fallback kalau kosong
                 $imageUrl = 'https://via.placeholder.com/600x600?text=No+Image';
             }
             $product->image_url = $imageUrl;
-            // >>> sampai sini <<<
-    
-            // description from first product detail or product field
+
             $firstDetail = $product->productDetails->first();
             $firstDetailId = $firstDetail->id ?? null;
             $product->description = $firstDetail->description ?? ($product->description ?? null);
 
-            // shop display name derived from seller
             $product->shop = (object) [
-                'name' => $product->seller->shop_name 
-                    ?? optional($product->seller->user)->name 
-                    ?? 'Toko'
+                'name' => ($product->seller->shop_name ?? optional($product->seller->user)->name ?? 'Toko')
             ];
-    
+
             $relatedProducts = Product::where('category_id', $product->category_id)
                 ->where('id', '!=', $product->id)
                 ->take(6)
                 ->get();
-    
+
             $detailIds = $product->productDetails->pluck('id')->all();
             $rawReviews = Rating::whereIn('product_detail_id', $detailIds)
                 ->orderByDesc('created_at')
@@ -76,7 +82,6 @@ class ProductController extends Controller
                 ];
             });
 
-            // compute rating stats server-side
             $avgRating = $rawReviews->count() ? round($rawReviews->avg('rating'), 1) : 0;
             $totalReviews = $rawReviews->count();
             $starCounts = [1=>0,2=>0,3=>0,4=>0,5=>0];
@@ -92,13 +97,16 @@ class ProductController extends Controller
     }
     public function index(Request $request)
     {
-        $q = trim($request->query('q', ''));
-        $categoryId = $request->query('category');
-
+        // Read query parameters
+        $q         = trim($request->query('q', ''));
+        $categoryId= $request->query('category');
+        $shopName  = trim($request->query('shop', ''));
+        $province  = trim($request->query('province', ''));
+        $city      = trim($request->query('city', ''));
         try {
             $perPage = 12;
 
-            $productsQuery = Product::with(['seller', 'ratings', 'category']);
+            $productsQuery = Product::with(['seller', 'seller.region', 'ratings', 'category']);
 
             if (!empty($q)) {
                 $productsQuery = $productsQuery->where(function ($w) use ($q) {
@@ -113,6 +121,27 @@ class ProductController extends Controller
                 $productsQuery = $productsQuery->where('category_id', $categoryId);
             }
 
+            if ($shopName !== '') {
+                $productsQuery->whereHas('seller', function ($s) use ($shopName) {
+                    $s->where('shop_name', 'like', '%' . $shopName . '%');
+                });
+            }
+
+            if ($province !== '') {
+                if (Schema::hasColumn('region', 'name')) {
+                    $productsQuery->whereHas('seller.region', function ($r) use ($province) {
+                        $r->where('name', 'like', '%' . $province . '%');
+                    });
+                }
+            }
+
+            if ($city !== '') {
+                // No city column in region; match seller address text
+                $productsQuery->whereHas('seller', function ($s) use ($city) {
+                    $s->where('address', 'like', '%' . $city . '%');
+                });
+            }
+
             $products = $productsQuery->latest()->paginate($perPage);
 
             // SAMAKAN FORMAT DENGAN HomeController + tambahkan URL
@@ -124,8 +153,8 @@ class ProductController extends Controller
                     'url'      => route('products.show', $p->id),
                     'name'     => $p->name,
                     'price'    => 'Rp ' . number_format($p->price ?? 0, 0, ',', '.'),
-                    'location' => $p->seller->region->name 
-                                ?? $p->seller->region->region_name 
+                    'location' => optional($p->seller->region)->name 
+                                ?? optional($p->seller->region)->region_name 
                                 ?? 'Tidak diketahui',
                     'rating'   => $avg,
                     'sold'     => property_exists($p, 'sold') ? ($p->sold ?? '0') : '0',
@@ -182,11 +211,58 @@ class ProductController extends Controller
             // );
         }
 
+        // Dropdown sources from Region (resilient to column differences)
+        $provinceList = collect();
+        if (Schema::hasColumn('region', 'name')) {
+            $provinceList = Region::select('name as province')
+                ->whereNotNull('name')
+                ->distinct()->orderBy('province')->pluck('province');
+        }
+        $cityList = collect();
+        if ($province !== '' && Schema::hasColumn('region', 'name')) {
+            $region = Region::where('name', $province)->first();
+            if ($region) {
+                $cityList = Seller::where('region_id', $region->id)
+                    ->whereNotNull('address')
+                    ->select('address as city')
+                    ->distinct()
+                    ->orderBy('city')
+                    ->pluck('city');
+            }
+        }
+
         return view('pengunjung.products', [
             'products'       => $products,
             'q'              => $q,
+            'shop'           => $shopName,
+            'province'       => $province,
+            'city'           => $city,
+            'provinceList'   => $provinceList,
+            'cityList'       => $cityList,
             'categories'     => Category::all(),
             'activeCategory' => $categoryId,
         ]);
+    }
+
+    /**
+     * AJAX: return city/regency list for a given province.
+     */
+    public function cities(Request $request)
+    {
+        $province = trim($request->query('province', ''));
+        if (!Schema::hasColumn('region', 'name')) {
+            return response()->json([]);
+        }
+        $region = Region::where('name', $province)->first();
+        if (!$region) {
+            return response()->json([]);
+        }
+        $cities = Seller::where('region_id', $region->id)
+            ->whereNotNull('address')
+            ->select('address as city')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
+        return response()->json($cities);
     }
 }
